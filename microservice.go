@@ -13,24 +13,14 @@ import (
 	"syscall"
 )
 
-func StartDefaultHttpServer(ctx context.Context, port int32) {
+func StartDefaultHttpServer(ctx context.Context, opts ...ServerOption) {
+	cfg := newServerConfig(opts...)
+
 	mainCtx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
 	srv := &http.Server{
-		Addr: fmt.Sprintf(":%d", port),
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			http.DefaultServeMux.ServeHTTP(w, r)
-			ctx := r.Context()
-			for {
-				select {
-				case <-ctx.Done():
-					slog.Info("handler graceful shutdown")
-					w.WriteHeader(http.StatusServiceUnavailable)
-					return
-				}
-			}
-		}),
+		Addr: fmt.Sprintf(":%d", cfg.port),
 		BaseContext: func(_ net.Listener) context.Context {
 			return mainCtx
 		},
@@ -42,7 +32,22 @@ func StartDefaultHttpServer(ctx context.Context, port int32) {
 	})
 	g.Go(func() error {
 		<-gCtx.Done()
-		return srv.Shutdown(gCtx)
+		slog.Info("start graceful shutdown", "timeout", cfg.gracefulShutdownTimeout)
+
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.gracefulShutdownTimeout)
+		defer cancel()
+
+		err := srv.Shutdown(shutdownCtx)
+		if err != nil {
+			slog.Error("graceful shutdown failed", "timeout", cfg.gracefulShutdownTimeout, "error", err.Error())
+			return err
+		}
+		select {
+		case <-shutdownCtx.Done():
+		}
+
+		slog.Info("graceful shutdown completed", "timeout", cfg.gracefulShutdownTimeout)
+		return nil
 	})
 
 	if err := g.Wait(); err != nil && !errors.Is(err, http.ErrServerClosed) {
