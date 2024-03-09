@@ -1,4 +1,4 @@
-module example/rest-gin
+module github.com/livraghi/microservice/examples/rest-gin
 
 go 1.22
 
