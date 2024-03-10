@@ -8,10 +8,15 @@ import (
 	"github.com/livraghi/microservice/configuration"
 )
 
+var (
+	BuildVersion = "(devel)"
+)
+
 func main() {
 	ctx := context.TODO()
 
 	cfg, err := configuration.LoadConfigurations(
+		configuration.WithAppVersion(BuildVersion),
 		configuration.WithConfigPath("./configs"),
 		configuration.WithConfigName("local"),
 		configuration.WithConfigType(configuration.ENV),
@@ -21,5 +26,5 @@ func main() {
 		return
 	}
 
-	microservice.StartDefaultHttpServer(ctx, microservice.WithPort(cfg.Port), microservice.WithGracefulShutdownTimeout(cfg.GracefulShutdownTimeout))
+	microservice.StartDefaultHttpServer(ctx, microservice.WithConfiguration(cfg))
 }
