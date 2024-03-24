@@ -53,9 +53,7 @@ func StartDefaultHttpServer(ctx context.Context, opts ...ServerOption) {
 			slog.Error("graceful shutdown failed", append(logDefaultsArgs, slog.Any("error", err))...)
 			return err
 		}
-		select {
-		case <-shutdownCtx.Done():
-		}
+		<-shutdownCtx.Done()
 
 		slog.Info("graceful shutdown completed", logDefaultsArgs...)
 		return nil
