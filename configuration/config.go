@@ -65,10 +65,9 @@ type MicroserviceConfiguration struct {
 }
 
 type kNativeConfiguration struct {
-	Port          int32  `mapstructure:"port"`
-	Service       string `mapstructure:"k_service"`
-	Revision      string `mapstructure:"k_revision"`
-	Configuration string `mapstructure:"k_configuration"`
+	Port     int32  `mapstructure:"port"`
+	Service  string `mapstructure:"k_service"`
+	Revision string `mapstructure:"k_revision"`
 }
 
 func (cfg *MicroserviceConfiguration) applyKNative(kNativeCfg *kNativeConfiguration) {
@@ -86,8 +85,6 @@ func (cfg *MicroserviceConfiguration) applyKNative(kNativeCfg *kNativeConfigurat
 		if err == nil {
 			cfg.Revision = rev
 		}
-	}
-	if kNativeCfg.Configuration != "" {
 	}
 }
 
