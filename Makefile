@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := all
-.PHONY: all clean check check-format format check-code-analysis-vet check-modules check-static-check check-security check-vulnerability compile test build
+.PHONY: all clean check check-format format check-code-analysis-vet check-modules check-static-check check-security check-vulnerability compile test build update_dependencies
 
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -94,3 +94,17 @@ test: compile
 build: compile test
 check: check-format check-code-analysis-vet check-modules check-static-check check-security check-vulnerability
 all: clean build check
+
+update_dependencies:
+	@BASE_PATH=$(PWD); \
+	for module in $(MODULES); do \
+  		echo "Update module dependencies: $$module"; \
+		cd $$module; \
+		go get -u ./...; \
+		go mod tidy; \
+		go mod verify; \
+	    cd $$BASE_PATH; \
+	done; \
+	go work vendor; \
+	go work sync; \
+	echo "Dependencies updated... $(SUCCESS)"
