@@ -1,6 +1,8 @@
 package observability
 
-import "time"
+import (
+	"time"
+)
 
 type tracingConfig struct {
 	exporterFactory NewTraceExporter
