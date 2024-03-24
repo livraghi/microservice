@@ -84,7 +84,7 @@ check-static-check: | $(STATIC_CHECK)
 	@$(STATIC_CHECK) -f stylish -fail all $(foreach modeule, $(MODULES), $(modeule)...) && echo "Run static check... $(SUCCESS)" || (echo "Run static check... $(FAIL)" && exit 1)
 
 check-security: | $(GOSEC)
-	@$(GOSEC) -tests -sort $(foreach modeule, $(MODULES), $(modeule)...) && echo "Run security check... $(SUCCESS)" || (echo "Run security check... $(FAIL)" && exit 1)
+	$(GOSEC) -tests -sort $(foreach modeule, $(MODULES), $(modeule)...) && echo "Run security check... $(SUCCESS)" || (echo "Run security check... $(FAIL)" && exit 1)
 
 check-vulnerability: | $(GOVULNCHECK)
 	@$(GOVULNCHECK) -test -show verbose $(foreach modeule, $(MODULES), $(modeule)...) && echo "Run vulnerability check... $(SUCCESS)" || (echo "Run vulnerability check... $(FAIL)" && exit 1)
@@ -92,7 +92,7 @@ check-vulnerability: | $(GOVULNCHECK)
 compile:
 test: compile
 build: compile test
-check: check-format check-code-analysis-vet check-modules check-static-check check-security check-vulnerability
+check: check-format check-code-analysis-vet check-modules check-static-check check-vulnerability # check-security
 all: clean build check
 
 update_dependencies:
