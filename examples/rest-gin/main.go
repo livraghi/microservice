@@ -19,7 +19,7 @@ var (
 func main() {
 	ctx := context.TODO()
 
-	cfg, err := configuration.LoadConfigurations(
+	cfg, err := configuration.ReadConfiguration(
 		configuration.WithAppVersion(BuildVersion),
 		configuration.WithConfigPath("./configs"),
 		configuration.WithConfigName("local"),

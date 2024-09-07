@@ -3,10 +3,34 @@ package configuration
 import (
 	"fmt"
 	"github.com/spf13/viper"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
 )
+
+func ReadConfiguration(cfg any) error {
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	mapConfigurationModel(cfg)
+	viper.AutomaticEnv()
+	return viper.Unmarshal(cfg)
+}
+
+func mapConfigurationModel(cfg any) {
+	vt := reflect.TypeOf(cfg)
+	if vt.Kind() == reflect.Ptr {
+		vt = vt.Elem()
+	}
+
+	for i := 0; i < vt.NumField(); i++ {
+		field := vt.Field(i)
+		tag := field.Tag.Get("mapstructure")
+		if tag == "" || tag == "-" {
+			continue
+		}
+		_ = viper.BindEnv(tag, strings.ToLower(tag), strings.ToUpper(tag))
+	}
+}
 
 func LoadConfigurations(opts ...Option) (*MicroserviceConfiguration, error) {
 	cfg := newConfigurationConfig(opts...)
