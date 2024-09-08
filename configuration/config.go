@@ -4,11 +4,30 @@ import (
 	"github.com/spf13/viper"
 	"reflect"
 	"strings"
+	"sync"
 )
 
+var readConfigMutex = new(sync.Mutex)
+
 func ReadConfiguration(model any, opts ...Option) error {
-	viper.Reset()
 	cfg := newConfigurationConfig(opts...)
+
+	readConfigMutex.Lock()
+	defer func() {
+		viper.Reset()
+		readConfigMutex.Unlock()
+	}()
+
+	viper.Reset()
+	viper.AddConfigPath(cfg.Path)
+
+	for _, file := range cfg.Files {
+		viper.SetConfigType(string(file.Type))
+		viper.SetConfigFile(file.Name)
+		viper.SetConfigName("app")
+		_ = viper.MergeInConfig()
+
+	}
 
 	//viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	//viper.AllowEmptyEnv(true)

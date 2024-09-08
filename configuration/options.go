@@ -14,8 +14,12 @@ type configurationFile struct {
 type ConfigType string
 
 const (
-	ENV  ConfigType = "env"
-	JSON ConfigType = "json"
+	Env        ConfigType = "env"
+	Json       ConfigType = "json"
+	Properties ConfigType = "properties"
+	Yaml       ConfigType = "yaml"
+	Toml       ConfigType = "toml"
+	Ini        ConfigType = "ini"
 )
 
 type Option func(config *configurationConfig)
@@ -95,12 +99,12 @@ func WithConfigFile(configType ConfigType, name string) Option {
 //}
 //
 //const (
-//	JSON ConfigType = "json"
-//	ENV  ConfigType = "env"
+//	Json ConfigType = "json"
+//	Env  ConfigType = "env"
 //
 //	DefaultConfigPath     = "./config"
 //	DefaultConfigName     = ".env"
-//	DefaultConfigType     = ENV
+//	DefaultConfigType     = Env
 //	DefaultAppName        = "simple-app"
 //	DefaultAppVersion     = "0.0.0"
 //	DefaultAppRevision    = 0

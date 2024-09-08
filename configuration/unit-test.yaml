@@ -1,0 +1,14 @@
+name: app name
+version: 1.0.0
+port: 3210
+list:
+  - 1
+  - 2
+  - 3
+map:
+  key1: value1
+  key2: value2
+struct:
+  string_field: string_value
+  int_field: 123
+  bool_field: true

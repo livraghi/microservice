@@ -23,7 +23,7 @@ func main() {
 		configuration.WithAppVersion(BuildVersion),
 		configuration.WithConfigPath("./configs"),
 		configuration.WithConfigName("local"),
-		configuration.WithConfigType(configuration.ENV),
+		configuration.WithConfigType(configuration.Env),
 	)
 	if err != nil {
 		slog.Error(

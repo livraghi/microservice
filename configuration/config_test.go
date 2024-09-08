@@ -3,13 +3,11 @@ package configuration
 import (
 	"fmt"
 	"github.com/joho/godotenv"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestReadConfiguration_Nothing(t *testing.T) {
-	viper.Reset()
 	setupEnvs(t)
 
 	var cfg configuration
@@ -21,7 +19,6 @@ func TestReadConfiguration_Nothing(t *testing.T) {
 }
 
 func TestReadConfiguration_env(t *testing.T) {
-	viper.Reset()
 	setupEnvs(t)
 
 	var cfg configuration
@@ -29,13 +26,52 @@ func TestReadConfiguration_env(t *testing.T) {
 
 	assert.NoError(t, err, "read configuration should not return an error")
 	assert.NotNil(t, cfg, "configuration should not be nil")
-	assert.Equal(t, *newConfigurationSample(), cfg, "configuration should be equal to the expected configuration")
+	expected := *newConfigurationSample()
+	expected.Map = `{"key1":"value1","key2":"value2"}` // viper does not support map[string]string for env variables
+	assert.Equal(t, expected, cfg, "configuration should be equal to the expected configuration")
 }
 
 func TestReadConfiguration_envFile(t *testing.T) {
-	viper.Reset()
 	var cfg configuration
-	err := ReadConfiguration(&cfg, WithConfigFile(ENV, "unit-test.env"))
+	err := ReadConfiguration(&cfg, WithConfigFile(Env, "unit-test.env"))
+
+	assert.NoError(t, err, "read configuration should not return an error")
+	assert.NotNil(t, cfg, "configuration should not be nil")
+	expected := *newConfigurationSample()
+	expected.Map = `{"key1":"value1","key2":"value2"}` // viper does not support map[string]string for env variables
+	assert.Equal(t, expected, cfg, "configuration should be equal to the expected configuration")
+}
+
+func TestReadConfiguration_jsonFile(t *testing.T) {
+	var cfg configuration
+	err := ReadConfiguration(&cfg, WithConfigFile(Json, "unit-test.json"))
+
+	assert.NoError(t, err, "read configuration should not return an error")
+	assert.NotNil(t, cfg, "configuration should not be nil")
+	assert.Equal(t, *newConfigurationSample(), cfg, "configuration should be equal to the expected configuration")
+}
+
+func TestReadConfiguration_propertiesFile(t *testing.T) {
+	var cfg configuration
+	err := ReadConfiguration(&cfg, WithConfigFile(Properties, "unit-test.properties"))
+
+	assert.NoError(t, err, "read configuration should not return an error")
+	assert.NotNil(t, cfg, "configuration should not be nil")
+	assert.Equal(t, *newConfigurationSample(), cfg, "configuration should be equal to the expected configuration")
+}
+
+func TestReadConfiguration_yamlFile(t *testing.T) {
+	var cfg configuration
+	err := ReadConfiguration(&cfg, WithConfigFile(Yaml, "unit-test.yaml"))
+
+	assert.NoError(t, err, "read configuration should not return an error")
+	assert.NotNil(t, cfg, "configuration should not be nil")
+	assert.Equal(t, *newConfigurationSample(), cfg, "configuration should be equal to the expected configuration")
+}
+
+func TestReadConfiguration_iniFile(t *testing.T) {
+	var cfg configuration
+	err := ReadConfiguration(&cfg, WithConfigFile(Ini, "unit-test.ini"))
 
 	assert.NoError(t, err, "read configuration should not return an error")
 	assert.NotNil(t, cfg, "configuration should not be nil")
@@ -70,7 +106,10 @@ func newConfigurationSample() *configuration {
 		Version: "1.0.0",
 		Port:    3210,
 		List:    []int32{1, 2, 3},
-		Map:     `{"key1":"value1","key2":"value2"}`,
+		Map: map[string]any{
+			"key1": "value1",
+			"key2": "value2",
+		},
 		Struct: struct {
 			StringField string `mapstructure:"string_field"`
 			IntField    int    `mapstructure:"int_field"`
