@@ -1,6 +1,6 @@
 module github.com/livraghi/microservice/examples/rest-gin
 
-go 1.22
+go 1.23
 
 replace (
 	github.com/livraghi/microservice => ../..

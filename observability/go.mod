@@ -1,6 +1,6 @@
 module github.com/livraghi/microservice/observability
 
-go 1.22
+go 1.23
 
 require (
 	go.opentelemetry.io/otel v1.24.0

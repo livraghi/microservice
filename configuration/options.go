@@ -1,89 +1,108 @@
 package configuration
 
 type configurationConfig struct {
-	Path           []string
-	Name           string
-	Type           ConfigType
-	AppName        string
-	AppVersion     string
-	AppRevision    int
-	AppEnvironment string
+	Path         string
+	EnvVariables bool
+	Files        []configurationFile
+}
+
+type configurationFile struct {
+	Type ConfigType
+	Name string
 }
 
 type ConfigType string
+
+const (
+	ENV  ConfigType = "env"
+	JSON ConfigType = "json"
+)
 
 type Option func(config *configurationConfig)
 
 func newConfigurationConfig(opts ...Option) *configurationConfig {
 	cfg := &configurationConfig{
-		Path:           nil,
-		Name:           DefaultConfigName,
-		Type:           DefaultConfigType,
-		AppName:        DefaultAppName,
-		AppVersion:     DefaultAppVersion,
-		AppRevision:    DefaultAppRevision,
-		AppEnvironment: DefaultAppEnvironment,
+		Path: "./",
 	}
 	for _, opt := range opts {
 		opt(cfg)
 	}
-	if len(cfg.Path) == 0 {
-		cfg.Path = append(cfg.Path, DefaultConfigPath)
-	}
 	return cfg
 }
 
-func WithConfigPath(path string) Option {
+func WithConfigurationsBasePath(basePath string) Option {
 	return func(config *configurationConfig) {
-		config.Path = append(config.Path, path)
+		config.Path = basePath
 	}
 }
 
-func WithConfigName(name string) Option {
+func WithEnvVariables() Option {
 	return func(config *configurationConfig) {
-		config.Name = name
+		config.EnvVariables = true
 	}
 }
 
-func WithConfigType(configType ConfigType) Option {
+func WithConfigFile(configType ConfigType, name string) Option {
 	return func(config *configurationConfig) {
-		config.Type = configType
+		config.Files = append(config.Files, configurationFile{
+			Type: configType,
+			Name: name,
+		})
 	}
 }
 
-func WithAppName(name string) Option {
-	return func(config *configurationConfig) {
-		config.AppName = name
-	}
-}
-
-func WithAppVersion(version string) Option {
-	return func(config *configurationConfig) {
-		config.AppVersion = version
-	}
-}
-
-func WithAppRevision(revision int) Option {
-	return func(config *configurationConfig) {
-		config.AppRevision = revision
-	}
-}
-
-func WithAppEnvironment(environment string) Option {
-	return func(config *configurationConfig) {
-		config.AppEnvironment = environment
-	}
-}
-
-const (
-	JSON ConfigType = "json"
-	ENV  ConfigType = "env"
-
-	DefaultConfigPath     = "./config"
-	DefaultConfigName     = ".env"
-	DefaultConfigType     = ENV
-	DefaultAppName        = "simple-app"
-	DefaultAppVersion     = "0.0.0"
-	DefaultAppRevision    = 0
-	DefaultAppEnvironment = "development"
-)
+//
+//func WithConfigPath(path string) Option {
+//	return func(config *configurationConfig) {
+//		config.Path = append(config.Path, path)
+//	}
+//}
+//
+//func WithConfigName(name string) Option {
+//	return func(config *configurationConfig) {
+//		config.Name = name
+//	}
+//}
+//
+//func WithConfigType(configType ConfigType) Option {
+//	return func(config *configurationConfig) {
+//		config.Type = configType
+//	}
+//}
+//
+//func WithAppName(name string) Option {
+//	return func(config *configurationConfig) {
+//		config.AppName = name
+//	}
+//}
+//
+//func WithAppVersion(version string) Option {
+//	return func(config *configurationConfig) {
+//		config.AppVersion = version
+//	}
+//}
+//
+//func WithAppRevision(revision int) Option {
+//	return func(config *configurationConfig) {
+//		config.AppRevision = revision
+//	}
+//}
+//
+//func WithAppEnvironment(environment string) Option {
+//	return func(config *configurationConfig) {
+//		config.AppEnvironment = environment
+//	}
+//}
+//
+//const (
+//	JSON ConfigType = "json"
+//	ENV  ConfigType = "env"
+//
+//	DefaultConfigPath     = "./config"
+//	DefaultConfigName     = ".env"
+//	DefaultConfigType     = ENV
+//	DefaultAppName        = "simple-app"
+//	DefaultAppVersion     = "0.0.0"
+//	DefaultAppRevision    = 0
+//	DefaultAppEnvironment = "development"
+//)

@@ -1,22 +1,28 @@
 package configuration
 
 import (
-	"fmt"
 	"github.com/spf13/viper"
 	"reflect"
-	"strconv"
 	"strings"
-	"time"
 )
 
-func ReadConfiguration(cfg any) error {
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	mapConfigurationModel(cfg)
-	viper.AutomaticEnv()
-	return viper.Unmarshal(cfg)
+func ReadConfiguration(model any, opts ...Option) error {
+	viper.Reset()
+	cfg := newConfigurationConfig(opts...)
+
+	//viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	//viper.AllowEmptyEnv(true)
+	//viper.SetTypeByDefaultValue(true)
+
+	if cfg.EnvVariables {
+		viper.AutomaticEnv()
+		mapConfigurationModel(model)
+	}
+
+	return viper.Unmarshal(model)
 }
 
-func mapConfigurationModel(cfg any) {
+func mapConfigurationModel(cfg any, prefix ...string) {
 	vt := reflect.TypeOf(cfg)
 	if vt.Kind() == reflect.Ptr {
 		vt = vt.Elem()
@@ -28,91 +34,98 @@ func mapConfigurationModel(cfg any) {
 		if tag == "" || tag == "-" {
 			continue
 		}
-		_ = viper.BindEnv(tag, strings.ToLower(tag), strings.ToUpper(tag))
-	}
-}
-
-func LoadConfigurations(opts ...Option) (*MicroserviceConfiguration, error) {
-	cfg := newConfigurationConfig(opts...)
-
-	viper.SetDefault("name", cfg.AppName)
-	viper.SetDefault("version", cfg.AppVersion)
-	viper.SetDefault("revision", cfg.AppRevision)
-	viper.SetDefault("environment", cfg.AppEnvironment)
-	viper.SetDefault("port", DefaultPort)
-	viper.SetDefault("graceful_shutdown_timeout", DefaultGracefulTimeout)
-	viper.SetDefault("k_service", "")
-	viper.SetDefault("k_revision", "")
-	viper.SetDefault("k_configuration", "")
-
-	for _, path := range cfg.Path {
-		viper.AddConfigPath(path)
-	}
-	viper.SetConfigName(cfg.Name)
-	viper.SetConfigType(string(cfg.Type))
-
-	viper.AutomaticEnv()
-
-	err := viper.ReadInConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	microserviceCfg := &MicroserviceConfiguration{}
-	err = viper.Unmarshal(microserviceCfg)
-	if err != nil {
-		return nil, err
-	}
-
-	kNativeCfg := &kNativeConfiguration{}
-	err = viper.Unmarshal(kNativeCfg)
-	if err != nil {
-		return nil, err
-	}
-	microserviceCfg.applyKNative(kNativeCfg)
-
-	//info, ok := debug.ReadBuildInfo()
-	//if ok {
-	//	microserviceCfg.Version = info.Main.Version
-	//}
-
-	return microserviceCfg, nil
-}
-
-type MicroserviceConfiguration struct {
-	Name                    string        `mapstructure:"name"`
-	Version                 string        `mapstructure:"version"`
-	Revision                int           `mapstructure:"revision"`
-	Environment             string        `mapstructure:"environment"`
-	Port                    int32         `mapstructure:"port"`
-	GracefulShutdownTimeout time.Duration `mapstructure:"graceful_shutdown_timeout"`
-}
-
-type kNativeConfiguration struct {
-	Port     int32  `mapstructure:"port"`
-	Service  string `mapstructure:"k_service"`
-	Revision string `mapstructure:"k_revision"`
-}
-
-func (cfg *MicroserviceConfiguration) applyKNative(kNativeCfg *kNativeConfiguration) {
-	if kNativeCfg.Port > 0 {
-		cfg.Port = kNativeCfg.Port
-	}
-	if kNativeCfg.Service != "" {
-		cfg.Name = kNativeCfg.Service
-	}
-	if kNativeCfg.Revision != "" {
-		rev, err := func(value string) (int, error) {
-			revision, _ := strings.CutPrefix(value, fmt.Sprintf("%s-", kNativeCfg.Service))
-			return strconv.Atoi(revision)
-		}(kNativeCfg.Revision)
-		if err == nil {
-			cfg.Revision = rev
+		_ = viper.BindEnv(
+			strings.ToLower(strings.Join(append(prefix, tag), ".")),
+			strings.ToUpper(strings.Join(append(prefix, tag), "_")),
+		)
+		if field.Type.Kind() == reflect.Struct {
+			mapConfigurationModel(reflect.New(field.Type).Interface(), append(prefix, tag)...)
 		}
 	}
 }
 
-const (
-	DefaultPort            = 8080
-	DefaultGracefulTimeout = 2 * time.Second
-)
+//
+//func LoadConfigurations(opts ...Option) (*MicroserviceConfiguration, error) {
+//	cfg := newConfigurationConfig(opts...)
+//
+//	viper.SetDefault("name", cfg.AppName)
+//	viper.SetDefault("version", cfg.AppVersion)
+//	viper.SetDefault("revision", cfg.AppRevision)
+//	viper.SetDefault("environment", cfg.AppEnvironment)
+//	viper.SetDefault("port", DefaultPort)
+//	viper.SetDefault("graceful_shutdown_timeout", DefaultGracefulTimeout)
+//	viper.SetDefault("k_service", "")
+//	viper.SetDefault("k_revision", "")
+//	viper.SetDefault("k_configuration", "")
+//
+//	for _, path := range cfg.Path {
+//		viper.AddConfigPath(path)
+//	}
+//	viper.SetConfigName(cfg.Name)
+//	viper.SetConfigType(string(cfg.Type))
+//
+//	viper.AutomaticEnv()
+//
+//	err := viper.ReadInConfig()
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	microserviceCfg := &MicroserviceConfiguration{}
+//	err = viper.Unmarshal(microserviceCfg)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	kNativeCfg := &kNativeConfiguration{}
+//	err = viper.Unmarshal(kNativeCfg)
+//	if err != nil {
+//		return nil, err
+//	}
+//	microserviceCfg.applyKNative(kNativeCfg)
+//
+//	//info, ok := debug.ReadBuildInfo()
+//	//if ok {
+//	//	microserviceCfg.Version = info.Main.Version
+//	//}
+//
+//	return microserviceCfg, nil
+//}
+//
+//type MicroserviceConfiguration struct {
+//	Name                    string        `mapstructure:"name"`
+//	Version                 string        `mapstructure:"version"`
+//	Revision                int           `mapstructure:"revision"`
+//	Environment             string        `mapstructure:"environment"`
+//	Port                    int32         `mapstructure:"port"`
+//	GracefulShutdownTimeout time.Duration `mapstructure:"graceful_shutdown_timeout"`
+//}
+//
+//type kNativeConfiguration struct {
+//	Port     int32  `mapstructure:"port"`
+//	Service  string `mapstructure:"k_service"`
+//	Revision string `mapstructure:"k_revision"`
+//}
+//
+//func (cfg *MicroserviceConfiguration) applyKNative(kNativeCfg *kNativeConfiguration) {
+//	if kNativeCfg.Port > 0 {
+//		cfg.Port = kNativeCfg.Port
+//	}
+//	if kNativeCfg.Service != "" {
+//		cfg.Name = kNativeCfg.Service
+//	}
+//	if kNativeCfg.Revision != "" {
+//		rev, err := func(value string) (int, error) {
+//			revision, _ := strings.CutPrefix(value, fmt.Sprintf("%s-", kNativeCfg.Service))
+//			return strconv.Atoi(revision)
+//		}(kNativeCfg.Revision)
+//		if err == nil {
+//			cfg.Revision = rev
+//		}
+//	}
+//}
+//
+//const (
+//	DefaultPort            = 8080
+//	DefaultGracefulTimeout = 2 * time.Second
+//)

@@ -1,6 +1,6 @@
 module github.com/livraghi/microservice
 
-go 1.22
+go 1.23
 
 require (
 	github.com/livraghi/microservice/configuration v0.0.0-20240324084856-e9b7b76a8f2e
